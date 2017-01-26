@@ -185,6 +185,40 @@ namespace ClientPlugin.Providers
             return matchMethods;
         }
 
+        public List<MethodDef> FindWhereName(string nameRegex, bool fullName)
+        {
+            List<MethodDef> matchMethods = new List<MethodDef>();
+            foreach (MethodDef md in _tDef.Methods)
+            {
+                if (!md.HasBody)
+                    continue;
+
+                if (Regex.IsMatch(fullName ? md.FullName : md.Name.String, nameRegex, RegexOptions.IgnoreCase))
+                {
+                    matchMethods.Add(md);
+                }
+            }
+
+            return matchMethods;
+        }
+
+        public List<MethodDef> FindWhereToken(string nameRegex, bool hexToken)
+        {
+            List<MethodDef> matchMethods = new List<MethodDef>();
+            foreach (MethodDef md in _tDef.Methods)
+            {
+                if (!md.HasBody)
+                    continue;
+
+                if (Regex.IsMatch(hexToken ? md.MDToken.ToInt32().ToString("X") : md.MDToken.ToInt32().ToString(), nameRegex, RegexOptions.IgnoreCase))
+                {
+                    matchMethods.Add(md);
+                }
+            }
+
+            return matchMethods;
+        }
+
         private string GetOpCodes(MethodDef md)
         {
             List<string> opcodes = new List<string>();

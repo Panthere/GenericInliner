@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using ClientPlugin.UI;
 using GenericInliner.Core.Settings;
+using System.Text.RegularExpressions;
 
 namespace GenericInliner.Core.UI.Controls
 {
@@ -64,6 +65,19 @@ namespace GenericInliner.Core.UI.Controls
 
         }
 
+        private bool IsRegexValid(string test)
+        {
+            try
+            {
+                new Regex(test);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (lbMain.SelectedItems.Count == 0)
@@ -85,8 +99,9 @@ namespace GenericInliner.Core.UI.Controls
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(txtAdd.Text))
+            if (string.IsNullOrEmpty(txtAdd.Text) || !IsRegexValid(txtAdd.Text))
                 return;
+
             lbMain.Items.Add(txtAdd.Text);
             txtAdd.Clear();
         }
@@ -97,6 +112,26 @@ namespace GenericInliner.Core.UI.Controls
             Invalidate();
 
             LoadSettings();
+        }
+
+        private void pasteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string clip = Clipboard.GetText();
+                if (string.IsNullOrEmpty(clip))
+                {
+                    return;
+                }
+                foreach (string line in clip.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    lbMain.Items.Add(line);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Error on Paste", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

@@ -17,9 +17,13 @@ namespace CallInliner
         public List<string> OpCodeRegex = new List<string>();
         public List<string> OperandRegex = new List<string>();
         public List<string> AttributeRegex = new List<string>();
-        
+        public List<string> MethodNameRegex = new List<string>();
+        public List<string> MethodTokenRegex = new List<string>();
+
         public bool MatchAll;
         public bool RemoveInlined;
+        public bool UseFullName;
+        public bool UseHexToken;
 
         private List<PluginControl> BuildPluginControls()
         {
@@ -48,6 +52,20 @@ namespace CallInliner
             });
             Controls.Add(new PluginControl()
             {
+                Description = "Method Name Regexes",
+                Index = 4,
+                Name = "MethodNameRegex",
+                Type = ControlType.Listview
+            });
+            Controls.Add(new PluginControl()
+            {
+                Description = "Method Token Regexes",
+                Index = 5,
+                Name = "MethodTokenRegex",
+                Type = ControlType.Listview
+            });
+            Controls.Add(new PluginControl()
+            {
                 Description = "Remove Inlined",
                 Index = 2,
                 Name = "RemoveInlined",
@@ -58,6 +76,20 @@ namespace CallInliner
                 Description = "Match All",
                 Index = 1,
                 Name = "MatchAll",
+                Type = ControlType.Checkbox
+            });
+            Controls.Add(new PluginControl()
+            {
+                Description = "Use FullName Matching",
+                Index = 4,
+                Name = "UseFullName",
+                Type = ControlType.Checkbox
+            });
+            Controls.Add(new PluginControl()
+            {
+                Description = "Use Hex Token Matching",
+                Index = 3,
+                Name = "UseHexToken",
                 Type = ControlType.Checkbox
             });
 
@@ -80,14 +112,21 @@ namespace CallInliner
                     case "OpCodeRegex": OpCodeRegex = (List<string>)ps.Value; break;
                     case "OperandRegex": OperandRegex = (List<string>)ps.Value; break;
                     case "AttributeRegex": AttributeRegex = (List<string>)ps.Value; break;
+                    case "MethodNameRegex": MethodNameRegex = (List<string>)ps.Value; break;
+                    case "MethodTokenRegex": MethodTokenRegex = (List<string>)ps.Value; break;
                     case "MatchAll": MatchAll = (bool)ps.Value; break;
                     case "RemoveInlined": RemoveInlined = (bool)ps.Value; break;
+                    case "UseHexToken": UseHexToken = (bool)ps.Value; break;
+                    case "UseFullName": UseFullName = (bool)ps.Value; break;
                 }
             }
 
             Logger.Log(this, string.Format("Loaded {0} OpCodeRegex", OpCodeRegex.Count));
             Logger.Log(this, string.Format("Loaded {0} OperandRegex", OperandRegex.Count));
             Logger.Log(this, string.Format("Loaded {0} AttributeRegex", AttributeRegex.Count));
+            Logger.Log(this, string.Format("Loaded {0} TokenRegex", MethodTokenRegex.Count));
+            Logger.Log(this, string.Format("Loaded {0} NameRegex", MethodNameRegex.Count));
+
 
             List<CallInfo> toPatch = new List<CallInfo>();
 
@@ -180,7 +219,14 @@ namespace CallInliner
                     continue;
                 }
                 int instIndex = cInfo.ParentMethod.Body.Instructions.IndexOf(cInfo.CallingInst);
-
+                if (!cInfo.TargetMethod.IsStatic)
+                {
+                    if (cInfo.ParentMethod.Body.Instructions[instIndex - 1].OpCode == OpCodes.Ldarg)
+                    {
+                        cInfo.ParentMethod.Body.Instructions[instIndex - 1].OpCode = OpCodes.Nop;
+                        cInfo.ParentMethod.Body.Instructions[instIndex - 1].Operand = null;
+                    }
+                }
                 List<Instruction> toCopy = cInfo.TargetMethod.Body.Instructions.Where(x =>
                     x.OpCode != OpCodes.Ldarg &&
                     x.OpCode != OpCodes.Starg &&
@@ -223,7 +269,7 @@ namespace CallInliner
                     Instruction tReplace = toCopy[i].Clone();
                     if (i == 0)
                     {
-
+                        
                         cInfo.ParentMethod.Body.Instructions[instIndex].OpCode = tReplace.OpCode;
                         cInfo.ParentMethod.Body.Instructions[instIndex].Operand = tReplace.Operand;
                     }
@@ -252,24 +298,16 @@ namespace CallInliner
 
             Logger.Log(this, string.Format("Processing has finished"));
         }
-        private int ProcessMethod(MethodDef md)
-        {
-            int processed = 0;
-
-            // Replace all load arguments, and associated locals with nops
-            // Extract the rest of the instructions replacing the ret?
-
-
-
-            return processed;
-        }
 
         private List<MethodDef> GetMatching(TypeDef td)
         {
             Identifier id = new Identifier(td);
+
             List<MethodDef> AttribMethods = new List<MethodDef>();
             List<MethodDef> OpCodeMethods = new List<MethodDef>();
             List<MethodDef> OperMethods = new List<MethodDef>();
+            List<MethodDef> NameMethods = new List<MethodDef>();
+            List<MethodDef> TokenMethods = new List<MethodDef>();
 
             if (AttributeRegex.Count != 0)
             {
@@ -283,16 +321,28 @@ namespace CallInliner
             {
                 OpCodeRegex.ForEach(x => OpCodeMethods.AddRange(id.FindWhereOpCodes(x)));
             }
+            if (MethodNameRegex.Count != 0)
+            {
+                MethodNameRegex.ForEach(x => NameMethods.AddRange(id.FindWhereName(x, UseFullName)));
+            }
+            if (MethodTokenRegex.Count != 0)
+            {
+                MethodTokenRegex.ForEach(x => TokenMethods.AddRange(id.FindWhereToken(x, UseHexToken)));
+            }
+
             List<MethodDef> MatchingMethods = new List<MethodDef>();
             if (MatchAll)
             {
                 foreach (var mtd in td.Methods)
                 {
 
-                    if((AttribMethods.Count > 0 || OpCodeMethods.Count > 0 || OperMethods.Count > 0) &&
+                    if((AttribMethods.Count > 0 || OpCodeMethods.Count > 0 || OperMethods.Count > 0 || NameMethods.Count > 0 || TokenMethods.Count > 0) &&
                         (AttribMethods.Count == 0 || AttribMethods.Contains(mtd)) &&
                         (OpCodeMethods.Count == 0 || OpCodeMethods.Contains(mtd)) &&
-                        (OperMethods.Count == 0 || OperMethods.Contains(mtd)))
+                        (OperMethods.Count == 0 || OperMethods.Contains(mtd)) &&
+                        (NameMethods.Count == 0 || NameMethods.Contains(mtd)) &&
+                        (TokenMethods.Count == 0 || TokenMethods.Contains(mtd))
+                        )
                         MatchingMethods.Add(mtd);
 
 
@@ -303,11 +353,10 @@ namespace CallInliner
                 MatchingMethods.AddRange(AttribMethods);
                 MatchingMethods.AddRange(OpCodeMethods);
                 MatchingMethods.AddRange(OperMethods);
+                MatchingMethods.AddRange(NameMethods);
+                MatchingMethods.AddRange(TokenMethods);
             }
-            if (MatchingMethods.Count > 0)
-            {
 
-            }
             return MatchingMethods;
         }
 

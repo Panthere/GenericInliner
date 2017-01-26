@@ -35,7 +35,7 @@ namespace MathInliner
             Controls.Add(new PluginControl()
             {
                 Description = "Ignore Math Methods",
-                Index = 4,
+                Index = 6,
                 Name = "IgnoredMethods",
                 Type = ControlType.Listview
             });
@@ -219,10 +219,6 @@ namespace MathInliner
 
             if (double.IsNaN(mResult) || double.IsInfinity(mResult))
             {
-                if (md.Name == "btnPatch_Click")
-                {
-
-                }
                 return false;
             }
 
