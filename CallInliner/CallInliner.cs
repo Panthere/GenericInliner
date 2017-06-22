@@ -148,8 +148,6 @@ namespace CallInliner
                 List<MethodDef> methodMatches = GetMatching(td).Distinct().ToList();
                 Logger.Log(this, string.Format("Found {0} Matches for {1}", methodMatches.Count, td.Name));
                 allMatches.AddRange(methodMatches);
-                
-
             }
             Logger.Log(this, string.Format("Found {0} Matches Total", allMatches.Count));
             foreach (TypeDef td in asm.Module.GetTypes())
@@ -184,7 +182,6 @@ namespace CallInliner
             List<CallInfo> toPatch2 = new List<CallInfo>(toPatch);
 
             // Have to do priority, if a method is already in the topatch and another has it as a target method then there needs to be priority for the latter.
-
             List<CallInfo> cInfos = new List<CallInfo>();
             
             foreach (CallInfo cInfo in toPatch)
