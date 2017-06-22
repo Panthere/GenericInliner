@@ -87,7 +87,7 @@ namespace CallInliner
             });
             Controls.Add(new PluginControl()
             {
-                Description = "Use Hex Token Matching",
+                Description = "Use Hex Token Matchings",
                 Index = 3,
                 Name = "UseHexToken",
                 Type = ControlType.Checkbox
