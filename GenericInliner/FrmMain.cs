@@ -139,7 +139,7 @@ namespace GenericInliner
             {
                 
                 lvPlugins.AddPluginRow(inliner);
-                clbEnabledPlugins.Items.Add(inliner.Name, true);
+                clbEnabledPlugins.Items.Add(inliner.Name, false);
 
                 if (inliner.Controls.Count == 0)
                     continue;
@@ -243,6 +243,7 @@ namespace GenericInliner
 
                 bool preserve = chkPreserve.Checked;
                 bool useDummy = chkDummyLog.Checked;
+                bool nativeWrite = chkNativeWrite.Checked;
 
                 btnStart.Enabled = false;
                 btnBrowseOpen.Enabled = false;
@@ -297,7 +298,25 @@ namespace GenericInliner
 
                     try
                     {
-                        asm.Module.Write(outFile, opts);
+                        if (nativeWrite)
+                        {
+                            NativeModuleWriterOptions nOpts = new NativeModuleWriterOptions(asm.Module);
+
+                            if (preserve)
+                            {
+                                nOpts.MetaDataOptions.Flags = MetaDataFlags.PreserveAll;
+                            }
+
+                            if (useDummy)
+                            {
+                                nOpts.Logger = DummyLogger.NoThrowInstance;
+                            }
+                            asm.Module.NativeWrite(outFile, nOpts);
+                        }
+                        else
+                        {
+                            asm.Module.Write(outFile, opts);
+                        }
                         Logger.Log("Processor", string.Format("Written output to {0}", outFile));
                     }
                     catch (Exception ex)

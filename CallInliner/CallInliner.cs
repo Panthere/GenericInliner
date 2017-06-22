@@ -202,8 +202,15 @@ namespace CallInliner
                     }
 
                     int index = cInfos.IndexOf(cMatch);
-                    Logger.Log(this, string.Format("Prioritizing {0} over {1}", cInfo.TargetMethod.Name, cMatch.TargetMethod.Name));
-                    cInfos.Insert(index - 1, cInfo);
+                    if (index >= 0)
+                    {
+                        Logger.Log(this, string.Format("Prioritizing {0} over {1}", cInfo.TargetMethod.Name, cMatch.TargetMethod.Name));
+                        cInfos.Insert(index != 0 ? index - 1 : index, cInfo);
+                    }
+                    else
+                    {
+                        cInfos.Add(cInfo);
+                    }
 
                 }
                 else
