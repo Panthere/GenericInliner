@@ -92,7 +92,7 @@ namespace SizeInliner
 
             if (!topmost && target.BaseType != null && target.BaseType.Name == "ValueType")
             {
-                ret += 1;
+                //ret += 1;
             }
 
             foreach (FieldDef fd in target.Fields)
