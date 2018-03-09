@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9CCB0AE9-19E1-4051-8FB7-0045DB051E0C}</ProjectGuid>
+    <ProjectGuid>{F82F4EA5-2089-4226-8968-E0AF3EA5BFBA}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>StringLengthInliner</RootNamespace>
-    <AssemblyName>StringLengthInliner</AssemblyName>
+    <RootNamespace>EmptyTypesInliner</RootNamespace>
+    <AssemblyName>EmptyTypesInliner</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -43,12 +43,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="StringLengthInliner.cs" />
+    <Compile Include="EmptyTypesInliner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ClientPlugin\ClientPlugin.csproj">
-      <Project>{A23D2B8A-9664-4B2B-B463-B56C016536D7}</Project>
+      <Project>{a23d2b8a-9664-4b2b-b463-b56c016536d7}</Project>
       <Name>ClientPlugin</Name>
     </ProjectReference>
   </ItemGroup>
